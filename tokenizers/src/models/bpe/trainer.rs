@@ -7,6 +7,7 @@ use crate::utils::progress::{ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::cell::UnsafeCell;
 
 #[derive(Debug, Eq)]
 struct Merge {
@@ -132,6 +133,7 @@ impl BpeTrainerBuilder {
         self.config.end_of_word_suffix = Some(suffix);
         self
     }
+
     /// Set max_token_length
     #[must_use]
     pub fn max_token_length(mut self, max_token_length: Option<usize>) -> Self {
@@ -190,7 +192,7 @@ pub struct BpeTrainer {
     pub initial_alphabet: HashSet<char>,
     /// An optional prefix to use on any subword that exist only behind another one
     pub continuing_subword_prefix: Option<String>,
-    /// An optional suffix to caracterize and end-of-word subword
+    /// An optional suffix to characterize an end-of-word subword
     pub end_of_word_suffix: Option<String>,
     /// An optional parameter to limit the max length of any single token
     pub max_token_length: Option<usize>,
@@ -529,17 +531,16 @@ impl BpeTrainer {
             }
             merges.push((top.pair, new_token_id));
 
-            // Merge the new pair in every words
+            // Merge the new pair in every word
             let changes = top
                 .pos
                 .maybe_par_iter()
                 .flat_map(|&i| {
-                    let word = &words[i] as *const _ as *mut Word;
+                    let word = UnsafeCell::new(words[i].clone());
                     // We can merge each of these words in parallel here because each position
                     // can be there only once (HashSet). So this is safe.
                     unsafe {
-                        // let word: &mut Word = &mut (*word);
-                        (*word)
+                        (*word.get())
                             .merge(top.pair.0, top.pair.1, new_token_id, max_token_length)
                             .into_iter()
                             .map(|c| (c, i))
