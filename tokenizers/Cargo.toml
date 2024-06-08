@@ -2,7 +2,7 @@
 authors = ["Anthony MOI <m.anthony.moi@gmail.com>", "Nicolas Patry <patry.nicolas@protonmail.com>"]
 edition = "2018"
 name = "tokenizers"
-version = "0.19.1-dev.0"
+version = "0.1.0"
 homepage = "https://github.com/huggingface/tokenizers"
 repository = "https://github.com/huggingface/tokenizers"
 documentation = "https://docs.rs/tokenizers/"
@@ -37,6 +37,7 @@ name = "unigram_benchmark"
 harness = false
 
 [dependencies]
+pyo3 = { version = "0.20.0", features = ["extension-module"] } 
 lazy_static = "1.4"
 rand = "0.8"
 onig = { version = "6.4", default-features = false, optional = true }
